@@ -23,6 +23,9 @@ test_loader = DataLoader(test_data,batch_size=batch_size,shuffle=False)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model_ft = resnet50(pretrained=False)
 model_ft.fc = nn.Linear(model_ft.fc.in_features, 10)
+
+model_ft.load_state_dict(torch.load('./weights/alpha_weight50'))
+
 net = model_ft.to(device)
 
 criterion = nn.CrossEntropyLoss()
@@ -32,7 +35,7 @@ optimizer = optim.SGD(net.parameters(),lr=0.01,momentum=0.9,weight_decay=0.00005
 loss,epoch_loss,count = 0,0,0
 acc_list = []
 loss_list = []
-for i in range(100):
+for i in range(50):
 
   #ここから学習
   net.train()

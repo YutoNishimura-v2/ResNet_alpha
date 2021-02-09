@@ -33,7 +33,7 @@ optimizer = optim.SGD(net.parameters(),lr=0.01,momentum=0.9,weight_decay=0.00005
 loss,epoch_loss,count = 0,0,0
 acc_list = []
 loss_list = []
-for i in range(50):
+for i in range(100):
 
   #ここから学習
   net.train()
