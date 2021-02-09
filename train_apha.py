@@ -93,7 +93,7 @@ for i in range(50):
 
   if (i+1) % 5 == 0:
     print('epoch:%d Accuracy(%d/%d):%f'%(i+1,correct,total,accuracy))
-    torch.save(net.state_dict(),'./weights/weight'+str(i+1))
+    torch.save(net.state_dict(),'./weights/alpha_weight'+str(i+1))
 
     
   
@@ -101,4 +101,4 @@ df = pd.DataFrame({
   'loss':loss_list,
   'acc':acc_list
 })
-df.to_csv('ResNet_log.csv', index=False)
+df.to_csv('ResNet_alpha_log.csv', index=False)
