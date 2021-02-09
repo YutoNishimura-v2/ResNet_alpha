@@ -292,7 +292,7 @@ class Bottleneck_alpha(nn.Module):
         planes: int,
         stride: int = 1,
         downsample: Optional[nn.Module] = None,
-        downsample4y : Optional[nn.Module] = None,
+        downsample4y: Optional[nn.Module] = None,
         groups: int = 1,
         base_width: int = 64,
         dilation: int = 1,
@@ -329,12 +329,10 @@ class Bottleneck_alpha(nn.Module):
         out = self.conv3(out)
         out = self.bn3(out)
 
-        if self.downsample is not None:
+        if (self.downsample is not None) and (out.size() != x.size()):
             identity = self.downsample(x)
-        if (self.downsample4y is not None) and (y.size() != out.size()):
-            # outとサイズが合わないときだけにしよう.
-            print(y.size())
-            print(out.size())
+        
+        if (self.downsample4y is not None) and (out.size() != y.size()):
             y = self.downsample4y(y)
 
         out += identity
@@ -377,13 +375,13 @@ class ResNet_alpha(nn.Module):
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 64, layers[0])
+        self.layer1 = self._make_layer(block, 64, layers[0], layer_num=0)
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2,
-                                       dilate=replace_stride_with_dilation[0])
+                                       dilate=replace_stride_with_dilation[0], layer_num=1)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2,
-                                       dilate=replace_stride_with_dilation[1])
+                                       dilate=replace_stride_with_dilation[1], layer_num=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
-                                       dilate=replace_stride_with_dilation[2])
+                                       dilate=replace_stride_with_dilation[2], layer_num=3)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
@@ -405,7 +403,7 @@ class ResNet_alpha(nn.Module):
                     nn.init.constant_(m.bn2.weight, 0)  # type: ignore[arg-type]
 
     def _make_layer(self, block: Type[Union[BasicBlock, Bottleneck_alpha]], planes: int, blocks: int,
-                    stride: int = 1, dilate: bool = False) -> nn.Sequential:
+                    stride: int = 1, dilate: bool = False, layer_num: int = None) -> nn.Sequential:
         norm_layer = self._norm_layer
         downsample = None
         previous_dilation = self.dilation
@@ -417,17 +415,22 @@ class ResNet_alpha(nn.Module):
                 conv1x1(self.inplanes, planes * block.expansion, stride),
                 norm_layer(planes * block.expansion),
             )
-        downsample4y = nn.Sequential(
-                conv1x1(self.inplanes, planes * block.expansion, stride),
-                norm_layer(planes * block.expansion),
+        layer_channels = [(64, 256, 1), (64, 512,2), (256, 1024,4), (512, 2048, 4)]
+        downsample4y_1 = nn.Sequential(
+            conv1x1(layer_channels[layer_num][0], layer_channels[layer_num][1], layer_channels[layer_num][2]),
+            norm_layer(layer_channels[layer_num][1]),
         )
-
+        layer_channels = [(64, 256, 1), (256, 512,2), (512, 1024, 2), (1024, 2048, 2)]
+        downsample4y_2 = nn.Sequential(
+            conv1x1(layer_channels[layer_num][0], layer_channels[layer_num][1], layer_channels[layer_num][2]),
+            norm_layer(layer_channels[layer_num][1]),
+        )
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample, downsample4y, self.groups,
+        layers.append(block(self.inplanes, planes, stride, downsample, downsample4y_1,self.groups,
                             self.base_width, previous_dilation, norm_layer))
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
-            layers.append(block(self.inplanes, planes, downsample4y=downsample4y, groups=self.groups,
+            layers.append(block(self.inplanes, planes, downsample4y=downsample4y_2, groups=self.groups,
                                 base_width=self.base_width, dilation=self.dilation,
                                 norm_layer=norm_layer))
 

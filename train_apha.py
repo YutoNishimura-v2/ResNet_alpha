@@ -12,11 +12,11 @@ from resnet import resnet_alpha50
 #画像の読み込み
 batch_size = 128
 
-train_data = dsets.CIFAR10(root='./cifar-10', train=True, download=True, transform=transforms.Compose([transforms.RandomHorizontalFlip(p=0.5), transforms.ToTensor(),transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]), transforms.RandomErasing(p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0, inplace=False)]))
+train_data = dsets.CIFAR10(root='./cifar-10', train=True, download=False, transform=transforms.Compose([transforms.RandomHorizontalFlip(p=0.5), transforms.ToTensor(),transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]), transforms.RandomErasing(p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0, inplace=False)]))
 
 train_loader = DataLoader(train_data,batch_size=batch_size,shuffle=True)
 
-test_data = dsets.CIFAR10(root='./cifar-10', train=False, download=True, transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]))
+test_data = dsets.CIFAR10(root='./cifar-10', train=False, download=False, transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])]))
 
 test_loader = DataLoader(test_data,batch_size=batch_size,shuffle=False)
 
